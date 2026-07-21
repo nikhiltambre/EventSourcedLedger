@@ -1,0 +1,43 @@
+# Maven build artifacts
+**/target/
+**/!**/src/main/**/target/
+**/!**/src/test/**/target/
+
+# Maven wrapper
+**/.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+**/.idea/
+**/*.iws
+**/*.iml
+**/*.ipr
+
+# VS Code
+**/.vscode/
+
+# STS / Spring Tools
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+
+# Secrets
+**/.env
+**/application-local.properties
+**/application-secret.properties
+**/*.pem
+**/*.key
+
+# Docker
+**/docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+**/*.log
+**/logs/
