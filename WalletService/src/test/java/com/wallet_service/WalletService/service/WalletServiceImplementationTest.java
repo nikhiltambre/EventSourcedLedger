@@ -101,6 +101,67 @@ public class WalletServiceImplementationTest {
                 .hasMessage("ACC999");
     }
 
+    // events exist after version (getEventsAfterVersion)
+    @Test
+    @DisplayName("getEventsAfterVersion -> fetches and returns events after given version")
+    void getEventsAfterVersion_shouldReturnEvents_afterCertainVersion() {
+        LedgerEvents event2 = new LedgerEvents();
+        event2.setVersion(2);
+        event2.setAggregateId("ACC100");
+
+        LedgerEvents event3 = new LedgerEvents();
+        event3.setVersion(3);
+        event3.setAggregateId("ACC100");
+
+        when(walletRepository.findByAggregateIdAndVersionGreaterThanOrderByVersionAsc("ACC100", 1))
+                .thenReturn(List.of(event2, event3));
+
+        List<LedgerEvents> result = walletService.getEventsAfterVersion("ACC100", 1);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getVersion()).isEqualTo(2);
+        assertThat(result.get(1).getVersion()).isEqualTo(3);
+    }
+
+    // no newer events exist (getEventsAfterVersion)
+    @Test
+    @DisplayName("getEventsAfterVersion -> returns empty list when no event exists after given version")
+    void getEventsAfterVersion_shouldReturnEmptyList_whenNoNewerEventsExist() {
+        when(walletRepository.findByAggregateIdAndVersionGreaterThanOrderByVersionAsc("ACC100", 99))
+                .thenReturn(List.of());
+
+        List<LedgerEvents> result = walletService.getEventsAfterVersion("ACC100", 99);
+
+        assertThat(result).isEmpty();
+    }
+
+    // has history( getCurrentVersion)
+    @Test
+    @DisplayName("getCurrentVersion -> fetches and returns current version when events exist")
+    void getCurrentVersion_shouldReturnCurrentVersion_whenEventExists() {
+        LedgerEvents latestEvent = new LedgerEvents();
+        latestEvent.setAggregateId("ACC100");
+        latestEvent.setVersion(3);
+
+        when(walletRepository.findFirstByAggregateIdOrderByVersionDesc("ACC100"))
+                .thenReturn(Optional.of(latestEvent));
+
+        Integer version = walletService.getCurrentVersion("ACC100");
+
+        assertThat(version).isEqualTo(3);
+    }
+
+    // brand-new aggregate (getCurrentVersion)
+    @Test
+    @DisplayName("getCurrentVersion -> returns 0 when aggregate has no events yet")
+    void getCurrentVersion_shouldReturnZero_whenNoEventsExist() {
+        when(walletRepository.findFirstByAggregateIdOrderByVersionDesc("ACC999"))
+                .thenReturn(Optional.empty());
+
+        Integer version = walletService.getCurrentVersion("ACC999");
+
+        assertThat(version).isEqualTo(0);
+    }
 
 }
 
