@@ -2,7 +2,6 @@ package com.wallet_service.WalletService.controller;
 
 
 import com.wallet_service.WalletService.model.entries.LedgerEvents;
-import com.wallet_service.WalletService.model.events.Event;
 import com.wallet_service.WalletService.service.EventStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

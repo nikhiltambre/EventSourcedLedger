@@ -25,44 +25,37 @@ public class AccountSnapshots {
             columnDefinition = "TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)")
     private LocalDateTime updatedAt;
 
-    protected AccountSnapshots() {
-        // JPA requires a no-arg constructor
-    }
+    public AccountSnapshots(){
 
+    }
     public AccountSnapshots(String aggregateId, Integer version, BigDecimal balance) {
         this.aggregateId = aggregateId;
         this.version = version;
         this.balance = balance;
     }
 
+
     public String getAggregateId() {
         return aggregateId;
     }
-
     public void setAggregateId(String aggregateId) {
         this.aggregateId = aggregateId;
     }
-
     public BigDecimal getBalance() {
         return balance;
     }
-
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
-
     public Integer getVersion() {
         return version;
     }
-
     public void setVersion(Integer version) {
         this.version = version;
     }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
-
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }

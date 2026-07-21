@@ -2,22 +2,28 @@ package com.wallet_service.WalletService.service;
 
 import com.wallet_service.WalletService.exception.EventAlreadyExists;
 import com.wallet_service.WalletService.exception.EventNotFound;
+import com.wallet_service.WalletService.model.entries.AccountSnapshots;
 import com.wallet_service.WalletService.model.entries.LedgerEvents;
+import com.wallet_service.WalletService.repository.SnapshotRepository;
 import com.wallet_service.WalletService.repository.WalletRepository;
 import com.wallet_service.WalletService.util.BalanceCalculator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
 public class WalletServiceImplementation implements EventStore {
 
     private final WalletRepository walletRepository;
+    private final SnapshotRepository snapshotRepository;
 
-    public WalletServiceImplementation(WalletRepository walletRepository) {
+    public WalletServiceImplementation(WalletRepository walletRepository, SnapshotRepository snapshotRepository) {
         this.walletRepository = walletRepository;
+        this.snapshotRepository = snapshotRepository;
     }
 
     @Override
@@ -36,7 +42,24 @@ public class WalletServiceImplementation implements EventStore {
                 null,
                 event.getTraceId()
         );
+
+
+        if (nextVersion % 50 == 0) {
+            BigDecimal previousBalance = getBalance(event.getAggregateId());
+            BigDecimal eventImpact = BalanceCalculator.calculateBalance(List.of(newEvent));
+            BigDecimal currentBalance = previousBalance.add(eventImpact);
+            AccountSnapshots entity = new AccountSnapshots(
+                    event.getAggregateId(),
+                    nextVersion,
+                    currentBalance
+            );
+            LedgerEvents savedEvent = walletRepository.save(newEvent);
+            snapshotRepository.save(entity);
+            return savedEvent;
+        }
+
         return walletRepository.save(newEvent);
+
     }
 
     @Override
@@ -45,26 +68,34 @@ public class WalletServiceImplementation implements EventStore {
         if (events.isEmpty()) {
             throw new EventNotFound("No events found for aggregate " + aggregateId);
         }
-        System.out.println("BALANCE=======>"+BalanceCalculator.calculateBalance(events));
         return events;
     }
 
     @Override
     public List<LedgerEvents> getEventsAfterVersion(String aggregateId, Integer afterVersion) {
-        List<LedgerEvents> events = walletRepository.findByAggregateIdAndVersionGreaterThanOrderByVersionAsc(aggregateId, afterVersion);
-        if (events.isEmpty()) {
-            throw new EventNotFound("No events found for aggregate " + aggregateId + " after version " + afterVersion);
-        }
-        return events;
+        return walletRepository.findByAggregateIdAndVersionGreaterThanOrderByVersionAsc(aggregateId, afterVersion);
+
     }
 
     @Override
     public Integer getCurrentVersion(String aggregateId) {
-        Integer version = walletRepository.findFirstByAggregateIdOrderByVersionDesc(aggregateId)
+        return walletRepository.findFirstByAggregateIdOrderByVersionDesc(aggregateId)
                 .map(LedgerEvents::getVersion).orElse(0);
-        if (version == 0) {
-            throw new EventNotFound("No events found for aggregate " + aggregateId);
+    }
+
+    @Override
+    public BigDecimal getBalance(String aggregateId) {
+        Optional<AccountSnapshots> snapshot = snapshotRepository.findFirstByAggregateIdOrderByVersionDesc(aggregateId);
+        //no snapshot exists (full replay of events for aggregateId)
+        if (snapshot.isEmpty()) {
+            return BalanceCalculator.calculateBalance(getEvents(aggregateId));
         }
-        return version;
+        //snapshot exists (snapshotBalance + balanceOfVersionsAfterSnapshots)
+        List<LedgerEvents> eventsAfterVersion = getEventsAfterVersion(aggregateId, snapshot.get().getVersion());
+
+        BigDecimal snapshotBalance = snapshot.get().getBalance();
+        BigDecimal balanceAfterVersion = BalanceCalculator.calculateBalance(eventsAfterVersion);
+
+        return snapshotBalance.add(balanceAfterVersion);
     }
 }

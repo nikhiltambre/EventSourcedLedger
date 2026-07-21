@@ -46,12 +46,19 @@ public class LedgerEvents {
     @Column(name = "trace_id", length = 64)
     private String traceId;
 
-    public LedgerEvents(Object o, String aggregateId, Integer nextVersion, String eventType, Event payload, Object o1, String traceId) {
-    }
 
     public LedgerEvents(){
 
     }
+
+    public LedgerEvents(Object o, String aggregateId, Integer nextVersion, String eventType, Event payload, Object o1, String traceId) {
+        this.aggregateId = aggregateId;
+        this.version= nextVersion;
+        this.eventType= eventType;
+        this.payload=payload;
+        this.traceId=traceId;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
