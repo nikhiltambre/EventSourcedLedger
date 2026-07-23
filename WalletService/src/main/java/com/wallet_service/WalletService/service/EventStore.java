@@ -1,5 +1,6 @@
 package com.wallet_service.WalletService.service;
 
+import com.wallet_service.WalletService.dto.DataObject;
 import com.wallet_service.WalletService.model.entries.LedgerEvents;
 
 import java.math.BigDecimal;
@@ -14,5 +15,5 @@ public interface EventStore {
 
     Integer getCurrentVersion(String aggregateId);
 
-    BigDecimal getBalance(String aggregateId);
+    DataObject getBalance(String aggregateId);
 }

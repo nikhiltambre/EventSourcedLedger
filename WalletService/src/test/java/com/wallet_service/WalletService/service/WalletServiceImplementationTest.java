@@ -212,7 +212,7 @@ public class WalletServiceImplementationTest {
         when(walletRepository.findByAggregateIdOrderByVersionAsc(aggregateId))
                 .thenReturn(List.of(event1));
         // act
-        BigDecimal result = walletService.getBalance(aggregateId);
+        BigDecimal result = walletService.getBalance(aggregateId).getBalance();
         // assert
         assertThat(result).isEqualByComparingTo("100");
         verify(walletRepository, times(1))
@@ -243,7 +243,7 @@ public class WalletServiceImplementationTest {
                         aggregateId, 50))
                 .thenReturn(List.of(deltaEvent));
         // act
-        BigDecimal balance = walletService.getBalance(aggregateId);
+        BigDecimal balance = walletService.getBalance(aggregateId).getBalance();
         // assert
         assertThat(balance).isEqualByComparingTo("550");
         verify(walletRepository, times(1))

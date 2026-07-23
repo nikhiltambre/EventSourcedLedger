@@ -1,12 +1,14 @@
 package com.wallet_service.WalletService.controller;
 
 
+import com.wallet_service.WalletService.dto.DataObject;
 import com.wallet_service.WalletService.model.entries.LedgerEvents;
 import com.wallet_service.WalletService.service.EventStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -43,6 +45,11 @@ public class WalletController {
     public ResponseEntity<Integer> getCurrentVersion(@PathVariable String aggregateId) {
         return ResponseEntity.ok(eventService.getCurrentVersion(aggregateId));
     }
+    @GetMapping("/getBalance/{aggregateId}")
+    public ResponseEntity<DataObject> getCurrentBalance(@PathVariable String aggregateId){
+        return ResponseEntity.ok(eventService.getBalance(aggregateId));
+    }
+
 
 
 }
