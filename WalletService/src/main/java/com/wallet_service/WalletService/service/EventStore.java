@@ -5,6 +5,7 @@ import com.wallet_service.WalletService.model.entries.LedgerEvents;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface EventStore {
     LedgerEvents appendEvent(LedgerEvents event);
@@ -16,4 +17,5 @@ public interface EventStore {
     Integer getCurrentVersion(String aggregateId);
 
     DataObject getBalance(String aggregateId);
+    Map<String, DataObject> getL1CacheContents();
 }

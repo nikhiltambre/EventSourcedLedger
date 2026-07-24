@@ -5,6 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.wallet_service.WalletService.dto.DataObject;
 import com.wallet_service.WalletService.exception.EventAlreadyExists;
 import com.wallet_service.WalletService.exception.EventNotFound;
 import com.wallet_service.WalletService.model.entries.AccountSnapshots;
@@ -25,6 +26,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RBucket;
+import org.redisson.api.RTopic;
+import org.redisson.api.RedissonClient;
+
 
 @ExtendWith(MockitoExtension.class)
 public class WalletServiceImplementationTest {
@@ -34,6 +39,14 @@ public class WalletServiceImplementationTest {
     @Mock
     private SnapshotRepository snapshotRepository;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private RBucket<DataObject> rBucket;
+
+    @Mock
+    private RTopic rTopic;
     @InjectMocks
     private WalletServiceImplementation walletService;
 
@@ -47,6 +60,9 @@ public class WalletServiceImplementationTest {
         sampleEvent.setVersion(1);
         sampleEvent.setEventType("AccountOpened");
         sampleEvent.setTraceId("trace-001");
+        lenient().when(redissonClient.<DataObject>getBucket(anyString())).thenReturn(rBucket);
+        lenient().when(redissonClient.getTopic(anyString())).thenReturn(rTopic);
+        lenient().when(rBucket.get()).thenReturn(null);
     }
 
     // version does not exists -> saves
@@ -75,6 +91,8 @@ public class WalletServiceImplementationTest {
         assertThat(capturedEvent.getAggregateId()).isEqualTo("ACC100");
         assertThat(capturedEvent.getVersion()).isEqualTo(2);
         assertThat(capturedEvent.getEventType()).isEqualTo("AccountOpened");
+        verify(rBucket, times(1)).delete();
+        verify(rTopic, times(1)).publish("ACC100");
     }
 
     // version does exists -> throws EventAlreadyExists
@@ -201,6 +219,8 @@ public class WalletServiceImplementationTest {
             "snapshot exists ")
     void
     getBalance_shouldCalculateFromFullHistory_whenNoSnapshotExist() {
+        when(redissonClient.<DataObject>getBucket("balance:ACC100")).thenReturn(rBucket);
+        when(rBucket.get()).thenReturn(null); //cache miss
         // arrange
         String aggregateId = sampleEvent.getAggregateId();
         when(snapshotRepository.findFirstByAggregateIdOrderByVersionDesc(
@@ -212,14 +232,15 @@ public class WalletServiceImplementationTest {
         when(walletRepository.findByAggregateIdOrderByVersionAsc(aggregateId))
                 .thenReturn(List.of(event1));
         // act
-        BigDecimal result = walletService.getBalance(aggregateId).getBalance();
+        DataObject result = walletService.getBalance(aggregateId);
         // assert
-        assertThat(result).isEqualByComparingTo("100");
+        assertThat(result.getBalance()).isEqualByComparingTo("100");
         verify(walletRepository, times(1))
                 .findByAggregateIdOrderByVersionAsc(aggregateId);
         verify(walletRepository, never())
                 .findByAggregateIdAndVersionGreaterThanOrderByVersionAsc(anyString(),
                         anyInt());
+        verify(rBucket).set(eq(result), anyLong(), any());
     }
 
     // snapshot exists (getBalance)
@@ -229,6 +250,10 @@ public class WalletServiceImplementationTest {
     void
     getBalance_shouldCalculateBalanceFromSnapshots_whenSnapshotsExists() {
         // arrange
+        when(redissonClient.<DataObject>getBucket("balance:ACC100"))
+                .thenReturn(rBucket);
+        when(rBucket.get()).thenReturn(null);
+
         String aggregateId = sampleEvent.getAggregateId();
         AccountSnapshots snapshot =
                 new AccountSnapshots(aggregateId, 50, new BigDecimal("500"));
@@ -243,13 +268,14 @@ public class WalletServiceImplementationTest {
                         aggregateId, 50))
                 .thenReturn(List.of(deltaEvent));
         // act
-        BigDecimal balance = walletService.getBalance(aggregateId).getBalance();
+        DataObject result = walletService.getBalance(aggregateId);
         // assert
-        assertThat(balance).isEqualByComparingTo("550");
+        assertThat(result.getBalance()).isEqualByComparingTo("550");
         verify(walletRepository, times(1))
                 .findByAggregateIdAndVersionGreaterThanOrderByVersionAsc(aggregateId,
                         50);
         verify(walletRepository, never())
                 .findByAggregateIdOrderByVersionAsc(anyString());
+        verify(rBucket).set(eq(result), anyLong(), any());
     }
 }
