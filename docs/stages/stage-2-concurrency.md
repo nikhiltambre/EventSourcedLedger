@@ -48,7 +48,7 @@ flowchart LR
 `WalletServiceImplementation` pre-checks version existence before calling `save()`:
 ```java
 Integer nextVersion = event.getVersion() + 1;
-if (walletRepository.existsByAggregateIdAndVersion(event.getAggregateId(), nextVersion)) {
+if (queryRepository.existsByAggregateIdAndVersion(event.getAggregateId(), nextVersion)) {
     throw new EventAlreadyExists("Version " + nextVersion + " already exists...");
 }
 ```

@@ -1,0 +1,17 @@
+{
+  "name": "wallet-ledger-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "debezium",
+    "database.password": "${env:DEBEZIUM_PASSWORD}",
+    "database.server.id": "184054",
+    "topic.prefix": "wallet",
+    "database.include.list": "ledger_write_db",
+    "table.include.list": "ledger_write_db.ledger_events",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+    "schema.history.internal.kafka.topic": "schemahistory.wallet",
+    "snapshot.mode": "initial"
+  }
+}
