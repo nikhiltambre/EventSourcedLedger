@@ -12,15 +12,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/accounts")
 public class WalletReadController {
-    private final QueryStore eventService;
+    private final QueryStore queryService;
 
-    public WalletReadController(QueryStore eventService) {
-        this.eventService = eventService;
+    public WalletReadController(QueryStore queryService) {
+        this.queryService = queryService;
     }
 
     @GetMapping("/getBalance/{accountId}")
     public ResponseEntity<BigDecimal> getCurrentBalance(@PathVariable String accountId) {
-        return ResponseEntity.ok(eventService.getBalance(accountId));
+        return ResponseEntity.ok(queryService.getBalance(accountId));
     }
 
     @GetMapping("/getTransactionHistory/{accountId}")
@@ -29,7 +29,7 @@ public class WalletReadController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        List<TransactionHistory> history = eventService.getTransactionHistory(accountId, page, size);
+        List<TransactionHistory> history = queryService.getTransactionHistory(accountId, page, size);
         if (history.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
