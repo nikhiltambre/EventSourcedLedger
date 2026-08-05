@@ -24,6 +24,19 @@ mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<-EOSQL
         updated_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+    CREATE TABLE idempotency_keys (
+        client_key VARCHAR(128) PRIMARY KEY,
+        response_payload JSON NOT NULL,
+        status_code INT NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    SET GLOBAL event_scheduler=ON;
+    CREATE EVENT IF NOT EXISTS purge_expired_idempotency_keys
+    ON SCHEDULE EVERY 1 HOUR
+    DO
+       DELETE FROM idempotency_keys WHERE expires_at < NOW();
     -- 2. READ DATABASE SETUP
     CREATE DATABASE IF NOT EXISTS ledger_read_db;
     USE ledger_read_db;
