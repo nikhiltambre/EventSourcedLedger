@@ -7,18 +7,18 @@
 
 ## Stage Progress
 
-| Stage | What it does | Status |
-|-------|-------------|--------|
-| **1** | Event Store — append-only ledger, full replay | ✅ Done |
-| **2** | Concurrency Versioning — `UNIQUE(aggregate_id, version)`, conflict check | ✅ Done |
-| **3** | Snapshotting — `account_snapshots` every 50 events, delta replay | ✅ Done |
-| **4** | Cache + Pub/Sub — Caffeine L1, Redis L2, cross-replica invalidation | ✅ Done |
+| Stage | What it does                                                              | Status |
+|-------|---------------------------------------------------------------------------|--|
+| **1** | Event Store — append-only ledger, full replay                             | ✅ Done |
+| **2** | Concurrency Versioning — `UNIQUE(aggregate_id, version)`, conflict check  | ✅ Done |
+| **3** | Snapshotting — `account_snapshots` every 50 events, delta replay          | ✅ Done |
+| **4** | Cache + Pub/Sub — Caffeine L1, Redis L2, cross-replica invalidation       | ✅ Done |
 | **5** | Gateway + CQRS + CDC — split into command/query, Debezium, Kafka consumer | ✅ Done |
-| **6** | Partitioning + Idempotency | ⬜ Not started |
-| **7** | Saga Orchestration | ⬜ Not started |
-| **8** | Resilient Saga State | ⬜ Not started |
-| **9** | Audit & Reconciliation | ⬜ Not started |
-| **10** | JVM + Container Tuning | ⬜ Not started |
+| **6** | Partitioning + Idempotency + Manual Commits                               | ✅ Done |
+| **7** | Saga Orchestration                                                        | ⬜ Not started |
+| **8** | Resilient Saga State                                                      | ⬜ Not started |
+| **9** | Audit & Reconciliation                                                    | ⬜ Not started |
+| **10** | JVM + Container Tuning                                                    | ⬜ Not started |
 
 ---
 
