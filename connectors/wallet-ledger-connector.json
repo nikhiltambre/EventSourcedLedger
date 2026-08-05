@@ -10,6 +10,7 @@
     "topic.prefix": "wallet",
     "database.include.list": "ledger_write_db",
     "table.include.list": "ledger_write_db.ledger_events",
+    "message.key.columns":"ledger_write_db.ledger_events:aggregate_id",
     "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
     "schema.history.internal.kafka.topic": "schemahistory.wallet",
     "snapshot.mode": "initial"
